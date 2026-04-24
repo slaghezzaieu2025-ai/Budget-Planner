@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Ledger{% endblock %}
+{% block bodyclass %}auth-body{% endblock %}
+{% block content %}
+<main class="auth-shell">
+  <aside class="auth-art" aria-hidden="true">
+    <div class="auth-art-grain"></div>
+    <div class="auth-art-content">
+      <div class="auth-mark">L<span>·</span></div>
+      <p class="auth-quote">
+        &ldquo;Every coin counted, <em>twice</em>.&rdquo;
+      </p>
+      <p class="auth-sub">A small ledger for a quieter financial life.</p>
+      <div class="auth-meta">
+        <span>Est. {{ '%04d'|format(2026) }}</span>
+        <span>·</span>
+        <span>Vol. I</span>
+      </div>
+    </div>
+  </aside>
+
+  <section class="auth-panel">
+    <header class="auth-head">
+      <p class="eyebrow">Welcome back</p>
+      <h1>Sign in to <em>your ledger</em></h1>
+    </header>
+
+    <form method="post" class="auth-form" autocomplete="on">
+      <label class="field">
+        <span>Username</span>
+        <input type="text" name="username" required autofocus autocomplete="username" />
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" required autocomplete="current-password" />
+      </label>
+      <button class="btn-primary" type="submit">Enter ledger →</button>
+    </form>
+
+    <p class="auth-foot">
+      New here? <a href="{{ url_for('register') }}">Create an account</a>
+    </p>
+  </section>
+</main>
+{% endblock %}

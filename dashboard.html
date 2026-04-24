@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Ledger{% endblock %}
+{% block bodyclass %}dash-body{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="brand">L<span>·</span></div>
+    <div class="brand-meta">
+      <span class="brand-name">Ledger</span>
+      <span class="brand-sub">Personal finance · Vol. I</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="currency-picker">
+      <span class="currency-label">Currency</span>
+      <select id="currency-select" aria-label="Currency symbol">
+        <option value="€">€  Euro</option>
+        <option value="$">$  Dollar</option>
+        <option value="£">£  Pound</option>
+        <option value="¥">¥  Yen</option>
+        <option value="₹">₹  Rupee</option>
+        <option value="₣">₣  Franc</option>
+        <option value="kr">kr Krona</option>
+      </select>
+    </div>
+    <div class="user-chip">
+      <span class="user-dot"></span>
+      <span id="user-name">{{ user.username }}</span>
+    </div>
+    <a class="btn-ghost" href="{{ url_for('logout') }}">Sign out</a>
+  </div>
+</header>
+
+<main class="dash">
+  <!-- HERO: TOTAL MONEY -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-main">
+        <p class="eyebrow">Total balance</p>
+        <h1 class="hero-amount">
+          <span class="hero-currency" id="hero-currency">€</span><span id="hero-total">0</span><span class="hero-decimals" id="hero-decimals">.00</span>
+        </h1>
+        <p class="hero-caption">
+          The sum of what's left to spend, what you were gifted, and what you've set aside.
+        </p>
+      </div>
+      <div class="hero-breakdown">
+        <div class="hero-stat">
+          <span class="hero-stat-label">Living budget left</span>
+          <span class="hero-stat-value" id="stat-living">—</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-label">Gifted</span>
+          <span class="hero-stat-value" id="stat-gifted">—</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-label">Savings</span>
+          <span class="hero-stat-value" id="stat-savings">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVING BUDGET -->
+  <section class="card section-living">
+    <header class="card-head">
+      <div>
+        <p class="eyebrow">Section I</p>
+        <h2>Living budget</h2>
+      </div>
+      <div class="card-head-meta">
+        <span><strong id="living-actual">—</strong> spent</span>
+        <span class="dot">·</span>
+        <span>of <strong id="living-budget-total">—</strong></span>
+      </div>
+    </header>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <p class="chart-title">Where it went</p>
+        <div class="donut-wrap">
+          <canvas id="donut-chart"></canvas>
+          <div class="donut-center">
+            <span class="donut-pct" id="donut-pct">0%</span>
+            <span class="donut-sub">of budget used</span>
+          </div>
+        </div>
+        <div class="legend" id="donut-legend"></div>
+      </div>
+
+      <div class="chart-card">
+        <p class="chart-title">Budget vs. actual</p>
+        <canvas id="bar-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="table-block">
+      <div class="table-head-row">
+        <h3>Categories</h3>
+        <button class="btn-quiet" id="add-category-btn">+ Add category</button>
+      </div>
+      <div class="table-wrap">
+        <table class="ledger-table" id="cat-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="num">Budget</th>
+              <th class="num">Actual</th>
+              <th class="num">Remaining</th>
+              <th class="num">Progress</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cat-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="num" id="foot-budget">—</td>
+              <td class="num" id="foot-actual">—</td>
+              <td class="num" id="foot-remaining">—</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-block">
+      <div class="table-head-row">
+        <h3>Add a transaction</h3>
+        <span class="hint">Logs an expense against a category.</span>
+      </div>
+      <form class="row-form" id="txn-form">
+        <select id="txn-category" required></select>
+        <input type="number" step="0.01" min="0" id="txn-amount" placeholder="Amount" required />
+        <input type="text" id="txn-description" placeholder="Description (e.g. lunch w/ Marta)" />
+        <input type="date" id="txn-date" />
+        <button class="btn-primary" type="submit">Log expense</button>
+      </form>
+
+      <div class="recent">
+        <p class="recent-title">Recent</p>
+        <ul class="recent-list" id="txn-list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- GIFTED MONEY -->
+  <section class="card section-gifted">
+    <header class="card-head">
+      <div>
+        <p class="eyebrow">Section II</p>
+        <h2>Gifted money</h2>
+      </div>
+      <div class="card-head-meta">
+        <span>Balance <strong id="gifted-total">—</strong></span>
+        <span class="dot">·</span>
+        <span><strong id="gifts-received">—</strong> in</span>
+        <span class="dot">·</span>
+        <span><strong id="gifts-spent">—</strong> out</span>
+      </div>
+    </header>
+
+    <div class="gift-forms">
+      <div class="gift-form-block">
+        <p class="form-label"><span class="form-label-dot in"></span> Add a gift</p>
+        <form class="row-form" id="gift-form">
+          <input type="number" step="0.01" min="0" id="gift-amount" placeholder="Amount" required />
+          <input type="text" id="gift-description" placeholder="From whom / occasion" />
+          <input type="date" id="gift-date" />
+          <button class="btn-primary" type="submit">Add gift</button>
+        </form>
+      </div>
+
+      <div class="gift-form-block">
+        <p class="form-label"><span class="form-label-dot out"></span> Spend gifted money</p>
+        <form class="row-form" id="gift-expense-form">
+          <input type="number" step="0.01" min="0" id="gift-expense-amount" placeholder="Amount" required />
+          <input type="text" id="gift-expense-description" placeholder="What did you spend it on?" />
+          <input type="date" id="gift-expense-date" />
+          <button class="btn-primary btn-danger" type="submit">Log spending</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="recent">
+      <p class="recent-title">Activity</p>
+      <ul class="gift-list" id="gift-list"></ul>
+    </div>
+  </section>
+
+  <!-- SAVINGS -->
+  <section class="card section-savings">
+    <header class="card-head">
+      <div>
+        <p class="eyebrow">Section III</p>
+        <h2>Savings</h2>
+      </div>
+      <div class="card-head-meta">
+        <span>Set aside</span>
+      </div>
+    </header>
+
+    <form class="savings-form" id="savings-form">
+      <div class="savings-input-wrap">
+        <span class="savings-currency" id="savings-currency">€</span>
+        <input type="number" step="0.01" min="0" id="savings-amount" placeholder="0.00" />
+      </div>
+      <button class="btn-primary" type="submit">Update savings</button>
+    </form>
+  </section>
+
+  <footer class="dash-foot">
+    <span>Ledger · made for one</span>
+    <span>·</span>
+    <span>Run locally on your machine</span>
+  </footer>
+</main>
+
+<!-- ADD CATEGORY MODAL -->
+<div class="modal-shade" id="cat-modal" hidden>
+  <div class="modal">
+    <header>
+      <h3>Add a category</h3>
+      <button class="modal-x" data-close-modal>×</button>
+    </header>
+    <form id="cat-form">
+      <label class="field">
+        <span>Name</span>
+        <input type="text" id="cat-name" placeholder="e.g. Books" required />
+      </label>
+      <label class="field">
+        <span>Monthly budget</span>
+        <input type="number" step="0.01" min="0" id="cat-budget" placeholder="100" required />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" data-close-modal>Cancel</button>
+        <button type="submit" class="btn-primary">Add category</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
